@@ -6,6 +6,7 @@
 #include <exception>
 #include <stdexcept>
 #include <typeinfo>
+#include <iostream>
 
 #define END this->mem_map.rbegin()
 #define BEG this->mem_map.begin()
@@ -22,7 +23,9 @@ struct memblock_t
 
 	memblock_t();
 	memblock_t(const memblock_t& rhs);
-
+	~memblock_t();
+	
+	
 };
 
 template <class _T>
@@ -69,8 +72,8 @@ class v_alloc
 
 public:
 
-	v_alloc();
-	~v_alloc();
+	inline v_alloc(){ this->size = 0; }
+	inline v_alloc(const v_alloc& rhs) { this->mem_map = rhs.mem_map; }
 
 	template <class _Block>
 	size_t push_back(_Block* rhs)
@@ -97,25 +100,30 @@ public:
 			throw MATCH_ERR;
 		check<_Block>();
 
-		rhs = (_Block*)(END->copy_constructor(END->loc));
-		END->dest(END->loc);
+		_Block *p = (_Block*)(END->copy_constructor(END->loc));
+		*rhs = *p;
+		delete p;
 		this->mem_map.pop_back();
+		this->size -= sizeof(_Block);
 		return sizeof(_Block);
 	}
+	size_t pop_back_dump();
 
 	template <class _Block>
 	size_t pop_front(_Block* rhs)
 	{
 		if (BEG->hash_code != typeid(_Block).hash_code())
 			throw MATCH_ERR;
-
 		check<_Block>();
 
-		rhs = (_Block*)(BEG->copy_constructor(BEG->loc));
-		BEG->dest(BEG->loc);
+		_Block *p = (_Block*)(BEG->copy_constructor(BEG->loc));
+		*rhs = *p;
+		delete p;
 		this->mem_map.erase(BEG);
+		this->size -= sizeof(_Block);
 		return sizeof(_Block);
 	}
+	size_t pop_front_dump();
 
 	template <class _Block>
 	size_t get(size_t pos, _Block* rhs)
@@ -125,10 +133,27 @@ public:
 		memblock_t block = this->mem_map[pos];
 		if (block.hash_code != typeid(_Block).hash_code())
 			throw MATCH_ERR;
-		rhs = (_Block*)(block.copy_constructor(block.loc));
+		*rhs = *(_Block*)(block.copy_constructor(block.loc));
 	}
 
-	void* operator[] (size_t pos);
+	inline void* operator[](size_t pos) { return(this->mem_map[pos].copy_constructor(this->mem_map[pos].loc)); }
+	
+	v_alloc& operator= (v_alloc& rhs);
+
+	inline size_t get_size() { return this->mem_map.size(); }
+	inline size_t byte_size() { return this->size; }
+	inline size_t max_size() { return this->mem_map.max_size(); }
+	void resize(size_t size);
+	inline size_t capcity() { return this->mem_map.capacity(); }
+	inline bool is_empty() { return this->mem_map.empty(); }
+	inline void reserve(size_t size) { this->mem_map.reserve(size); }
+	inline void shrink_to_fit() { this->mem_map.shrink_to_fit(); }
+	
+	template <class _Block>
+	inline size_t front(_Block* rhs) { return this->get(this->mem_map.size() - 1, rhs); }
+
+	template <class _Block>
+	inline size_t back(_Block* rhs) { return this->get(0, rhs); }
 };
 
 #undef END 

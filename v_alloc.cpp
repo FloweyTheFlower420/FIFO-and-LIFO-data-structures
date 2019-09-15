@@ -31,24 +31,44 @@ memblock_t::memblock_t(const memblock_t& rhs)
 	}
 }
 
-v_alloc::v_alloc()
+memblock_t::~memblock_t()
 {
-	this->size = 0;
+	if (this->loc != NULL && this->dest != NULL)
+		this->dest(this->loc);
 }
 
-v_alloc::~v_alloc()
+size_t v_alloc::pop_back_dump() 
 {
-	size_t pos = 0;
-	while (pos < this->mem_map.size())
+	(this->mem_map.end() - 1)->dest((this->mem_map.end() - 1)->loc);
+	this->mem_map.pop_back();
+	return 0;
+}
+
+size_t v_alloc::pop_front_dump()
+{
+	(this->mem_map.begin() - 1)->dest((this->mem_map.begin() - 1)->loc);
+	this->mem_map.erase(this->mem_map.begin());
+	return 0;
+}
+
+v_alloc& v_alloc::operator= (v_alloc& rhs)
+{
+	this->mem_map = rhs.mem_map;
+	return *this;
+}
+
+void v_alloc::resize(size_t size)
+{
+	if (this->mem_map.size() <= size)
+		this->mem_map.resize(size);
+	else
 	{
-		remove_memblock(&this->mem_map[pos]);
-		pos++;
+		size_t pos = this->mem_map.size() - 1;
+		while (pos > size)
+		{
+			this->pop_back_dump();
+			pos--;
+		}
+		this->mem_map.resize(size);
 	}
-
-	this->mem_map.clear();
-}
-
-void* v_alloc::operator[](size_t pos)
-{
-	return(this->mem_map[pos].copy_constructor(this->mem_map[pos].loc));
 }

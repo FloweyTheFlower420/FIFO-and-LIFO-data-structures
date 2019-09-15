@@ -1,3 +1,4 @@
+#define _CRTDBG_MAP_ALLOC
 #include <iostream>
 #include "stack.h"
 //test code
@@ -28,8 +29,9 @@ public:
 
 int main()
 {
-	LIFO stack;
-	foo *test_0 = new foo();
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	{LIFO stack;
+	foo* test_0 = new foo();
 	bar* test_1 = new bar();
 	std::cout << "pushing...\n\n";
 
@@ -38,6 +40,7 @@ int main()
 
 	std::cout << "\npopping...\n\n";
 
+
 	stack.pop(test_1);
 	stack.pop(test_0);
 
@@ -45,6 +48,8 @@ int main()
 
 	delete test_0;
 	delete test_1;
+	}
+	_CrtDumpMemoryLeaks();
 	return 0;
 }
 
