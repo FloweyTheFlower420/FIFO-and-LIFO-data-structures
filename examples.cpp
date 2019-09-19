@@ -1,6 +1,6 @@
-#define _CRTDBG_MAP_ALLOC
 #include <iostream>
 #include "stack.h"
+#include "queue.h"
 //test code
 
 class foo {
@@ -29,12 +29,11 @@ public:
 
 int main()
 {
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	{LIFO stack;
+	LIFO stack;
+	FIFO queue;
 	foo* test_0 = new foo();
 	bar* test_1 = new bar();
 	std::cout << "pushing...\n\n";
-
 	stack.push(test_0);
 	stack.push(test_1);
 
@@ -43,13 +42,19 @@ int main()
 
 	stack.pop(test_1);
 	stack.pop(test_0);
+	std::cout << "\nenqueue...\n\n";
 
-	std::cout << "\ndying...\n\n";
+	queue.enqueue(test_0);
+	queue.enqueue(test_1);
 
+	std::cout << "\ndequeue...\n\n";
+
+	queue.dequeue(test_0);
+	queue.dequeue(test_1);
+
+	std::cout << "\ndeleteing allocated memory\n\n";
 	delete test_0;
 	delete test_1;
-	}
-	_CrtDumpMemoryLeaks();
 	return 0;
 }
 
